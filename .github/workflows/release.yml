@@ -1,0 +1,82 @@
+name: release
+
+# Tag a commit to cut a release, e.g.:
+#   git tag v1.0.0 && git push origin v1.0.0
+on:
+  push:
+    tags: [ 'v*' ]
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Derive version from tag
+        id: ver
+        shell: bash
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Publish + build installer (and portable single-file exe)
+        shell: pwsh
+        run: ./packaging/windows/build-windows.ps1 -Version ${{ steps.ver.outputs.version }} -SingleFile
+
+      - name: Rename portable exe
+        shell: pwsh
+        run: |
+          if (Test-Path dist/LlamaLauncher.exe) {
+            Move-Item dist/LlamaLauncher.exe "dist/LlamaLauncher-${{ steps.ver.outputs.version }}-win-x64-portable.exe" -Force
+          }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: |
+            installer/windows/Output/*.exe
+            dist/*-portable.exe
+
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Derive version from tag
+        id: ver
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Build tarball + .deb
+        run: |
+          chmod +x packaging/linux/build-linux.sh
+          ./packaging/linux/build-linux.sh "${{ steps.ver.outputs.version }}" linux-x64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: dist/*
+
+  release:
+    needs: [ windows, linux ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          generate_release_notes: true
+          files: artifacts/**/*

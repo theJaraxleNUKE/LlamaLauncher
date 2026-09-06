@@ -1,0 +1,40 @@
+# Build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+publish/
+artifacts/
+*.user
+*.suo
+*.userprefs
+
+# Rider / VS / VS Code
+.idea/
+.vs/
+.vscode/
+*.DotSettings.user
+
+# Publish / packaging output
+dist/
+*.zip
+*.tar.gz
+*.deb
+*.AppImage
+installer/windows/Output/
+
+# Runtime config written next to the binary (do not commit machine-specific paths).
+# The tracked seed lives at the repo root; the copy that lands beside the built
+# exe and the generated preset are per-machine.
+**/bin/**/llama-models.json
+**/publish/**/llama-models.json
+config.ini
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Keep the sample preset out of the way of a real one, but it's fine to track it.
+# (config.sample.ini is intentionally committed as documentation.)

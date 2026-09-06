@@ -1,0 +1,360 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:conv="using:Avalonia.Data.Converters"
+        x:Class="LlamaLauncher.MainWindow"
+        Title="Llama Launcher"
+        Icon="/app.ico"
+        Width="1180" Height="820" MinWidth="900" MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource BgBrush}">
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="220" MinHeight="120"/>
+        </Grid.RowDefinitions>
+
+        <!-- ================= Top bar ================= -->
+        <Border Grid.Row="0" Background="{DynamicResource PanelBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                CornerRadius="10" Padding="14,12" Margin="0,0,0,12">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Classes="label" Text="llama-server"/>
+                    <TextBox Grid.Column="1" Margin="6,0,16,0" Text="{Binding ServerPath}"/>
+
+                    <TextBlock Grid.Column="2" Classes="label" Text="models folder"/>
+                    <TextBox Grid.Column="3" Margin="6,0,16,0" Text="{Binding ModelsFolder}"/>
+
+                    <Button Grid.Column="4" Content="Rescan" Command="{Binding RescanCommand}" Margin="0,0,8,0"/>
+                    <Button Grid.Column="5" Content="Stop Server" Classes="danger" Command="{Binding StopCommand}"/>
+                </Grid>
+
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Classes="label" Text="opencode.json"/>
+                    <TextBox Grid.Column="1" Margin="6,0,8,0" Text="{Binding OpenCodePath}"/>
+                    <Button Grid.Column="2" Content="Browse…" Click="BrowseOpenCode_Click" Margin="0,0,16,0"/>
+                    <CheckBox Grid.Column="3" Content="Sync context on load"
+                              VerticalAlignment="Center" IsChecked="{Binding SyncOpenCode}"/>
+                </Grid>
+
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Classes="label" Text="llama-server config.ini"/>
+                    <TextBox Grid.Column="1" Margin="6,0,8,0" Text="{Binding PresetIniPath}"
+                             Watermark="blank = config.ini next to the app"/>
+                    <Button Grid.Column="2" Content="Browse…" Click="BrowseIni_Click" Margin="0,0,8,0"/>
+                    <Button Grid.Column="3" Content="Write .ini" Command="{Binding WriteIniCommand}" Margin="0,0,16,0"/>
+                    <CheckBox Grid.Column="4" Content="Auto-write on save"
+                              VerticalAlignment="Center" IsChecked="{Binding WritePresetIni}"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- ================= Main content ================= -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="320" MinWidth="240"/>
+                <ColumnDefinition Width="6"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Profile list -->
+            <Border Grid.Column="0" Background="{DynamicResource PanelBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                    CornerRadius="10" Padding="8">
+                <DockPanel>
+                    <Grid DockPanel.Dock="Top" Margin="6,4,4,8">
+                        <TextBlock Classes="section" Text="PROFILES" Margin="0"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Duplicate" Command="{Binding DuplicateCommand}"
+                                    Padding="8,3" FontSize="11" Margin="0,0,6,0"/>
+                            <Button Content="Delete" Classes="danger" Command="{Binding DeleteProfileCommand}"
+                                    Padding="8,3" FontSize="11"/>
+                        </StackPanel>
+                    </Grid>
+                    <ListBox ItemsSource="{Binding Models}" SelectedItem="{Binding SelectedModel}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="{Binding ProfileName}"
+                                                   TextTrimming="CharacterEllipsis" FontSize="13"/>
+                                        <TextBlock Text="{Binding FileName}"
+                                                   TextTrimming="CharacterEllipsis" FontSize="10"
+                                                   FontFamily="{DynamicResource MonoFont}"
+                                                   Foreground="{DynamicResource MutedBrush}"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Border CornerRadius="4" Padding="6,1" Margin="6,0,0,0"
+                                                Background="#3A2E00" IsVisible="{Binding !IsConfigured}">
+                                            <TextBlock Text="NEW" FontSize="10" FontWeight="Bold"
+                                                       Foreground="{DynamicResource WarnBrush}"/>
+                                        </Border>
+                                        <Border CornerRadius="4" Padding="6,1" Margin="6,0,0,0"
+                                                Background="#3A1414" IsVisible="{Binding FileMissing}">
+                                            <TextBlock Text="MISSING" FontSize="10" FontWeight="Bold"
+                                                       Foreground="{DynamicResource DangerBrush}"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </Border>
+
+            <GridSplitter Grid.Column="1" Width="6" ResizeDirection="Columns" Background="Transparent"/>
+
+            <!-- Editor -->
+            <Border Grid.Column="2" Background="{DynamicResource PanelBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                    CornerRadius="10" Padding="16">
+                <Grid IsEnabled="{Binding Editor, Converter={x:Static conv:ObjectConverters.IsNotNull}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Editor header -->
+                    <StackPanel Grid.Row="0" Margin="0,0,0,6">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Editor.ProfileName, FallbackValue='Select a profile'}"
+                                       FontSize="15" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextBrush}"/>
+                            <Border CornerRadius="4" Padding="6,1" Margin="10,0,0,0" Background="#0E2A2E"
+                                    IsVisible="{Binding Editor.IsDirty, FallbackValue=False}">
+                                <TextBlock Text="UNSAVED" FontSize="10" FontWeight="Bold"
+                                           Foreground="{DynamicResource AccentBrush}"/>
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Text="{Binding Editor.FileName}"
+                                   FontFamily="{DynamicResource MonoFont}" FontSize="11"
+                                   Foreground="{DynamicResource MutedBrush}" Margin="0,2,0,0"/>
+                    </StackPanel>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,10,0">
+                        <StackPanel>
+
+                            <TextBlock Classes="section" Text="CORE"/>
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="Profile name"/>
+                                <TextBox Text="{Binding Editor.ProfileName}"/>
+                            </DockPanel>
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="Model file"/>
+                                <TextBlock Text="{Binding Editor.FileName}" VerticalAlignment="Center"
+                                           FontFamily="{DynamicResource MonoFont}"
+                                           Foreground="{DynamicResource MutedBrush}"
+                                           TextTrimming="CharacterEllipsis"/>
+                            </DockPanel>
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="Alias (--alias)"/>
+                                <TextBox Text="{Binding Editor.Alias}"/>
+                            </DockPanel>
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="Host (--host)"/>
+                                <TextBox Text="{Binding Editor.Host}"/>
+                            </DockPanel>
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="Port (--port)"/>
+                                <TextBox Text="{Binding Editor.Port}"/>
+                            </DockPanel>
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="GPU layers (-ngl)"/>
+                                <TextBox Text="{Binding Editor.GpuLayers}"/>
+                            </DockPanel>
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="Context (-c)"/>
+                                <TextBox Text="{Binding Editor.ContextSize}"/>
+                            </DockPanel>
+                            <CheckBox Content="Flash attention (-fa 1)" IsChecked="{Binding Editor.FlashAttention}"/>
+
+                            <TextBlock Classes="section" Text="SPECULATIVE DECODING"/>
+                            <CheckBox Content="Enable speculative decoding" IsChecked="{Binding Editor.SpeculativeEnabled}"/>
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="Spec type (--spec-type)"/>
+                                <TextBox Text="{Binding Editor.SpecType}"/>
+                            </DockPanel>
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="Draft n-max"/>
+                                <TextBox Text="{Binding Editor.SpecDraftNMax}"/>
+                            </DockPanel>
+
+                            <TextBlock Classes="section" Text="KV CACHE"/>
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="Cache K (--cache-type-k)"/>
+                                <TextBox Text="{Binding Editor.CacheTypeK}"/>
+                            </DockPanel>
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="Cache V (--cache-type-v)"/>
+                                <TextBox Text="{Binding Editor.CacheTypeV}"/>
+                            </DockPanel>
+                            <CheckBox Content="Unified KV (--kv-unified)" IsChecked="{Binding Editor.KvUnified}"/>
+
+                            <TextBlock Classes="section" Text="PERFORMANCE"/>
+                            <TextBlock Classes="muted" FontSize="11" Margin="0,0,0,4"
+                                       Text="Set any value to 0 to omit the flag and use llama-server's default."/>
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="CPU MoE layers (--n-cpu-moe)"/>
+                                <TextBox Text="{Binding Editor.NCpuMoe}"/>
+                            </DockPanel>
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="Parallel (-np)"/>
+                                <TextBox Text="{Binding Editor.Parallel}"/>
+                            </DockPanel>
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="Batch (-b)"/>
+                                <TextBox Text="{Binding Editor.BatchSize}"/>
+                            </DockPanel>
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="U-batch (-ub)"/>
+                                <TextBox Text="{Binding Editor.UBatchSize}"/>
+                            </DockPanel>
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="Threads (-t)"/>
+                                <TextBox Text="{Binding Editor.Threads}"/>
+                            </DockPanel>
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="Threads batch (-tb)"/>
+                                <TextBox Text="{Binding Editor.ThreadsBatch}"/>
+                            </DockPanel>
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="HTTP threads"/>
+                                <TextBox Text="{Binding Editor.ThreadsHttp}"/>
+                            </DockPanel>
+                            <WrapPanel Margin="0,4">
+                                <CheckBox Content="--no-mmap" IsChecked="{Binding Editor.NoMmap}" Margin="0,0,18,0"/>
+                                <CheckBox Content="--mlock" IsChecked="{Binding Editor.Mlock}" Margin="0,0,18,0"/>
+                                <CheckBox Content="--jinja" IsChecked="{Binding Editor.Jinja}" Margin="0,0,18,0"/>
+                                <CheckBox Content="--perf" IsChecked="{Binding Editor.Perf}"/>
+                            </WrapPanel>
+
+                            <TextBlock Classes="section" Text="RUNTIME / TEMPLATE"/>
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="Cache reuse (--cache-reuse)"/>
+                                <TextBox Text="{Binding Editor.CacheReuse}"/>
+                            </DockPanel>
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="chat-template-kwargs"/>
+                                <TextBox Text="{Binding Editor.ChatTemplateKwargs}"/>
+                            </DockPanel>
+                            <TextBlock Classes="muted" FontSize="11" Margin="0,0,0,0"
+                                       Text="JSON passed verbatim, e.g. {&quot;reasoning_effort&quot;:&quot;high&quot;}"/>
+
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="chat-template-file"/>
+                                <Button DockPanel.Dock="Right" Content="Fix from model"
+                                        Command="{Binding FixTemplateCommand}"
+                                        Margin="6,0,0,0" Padding="8,3" FontSize="11"/>
+                                <Button DockPanel.Dock="Right" Content="Browse…"
+                                        Click="BrowseTemplate_Click"
+                                        Margin="6,0,0,0" Padding="8,3" FontSize="11"/>
+                                <TextBox Text="{Binding Editor.ChatTemplateFile}"/>
+                            </DockPanel>
+                            <TextBlock Classes="muted" FontSize="11" Margin="0,0,0,0"
+                                       TextWrapping="Wrap"
+                                       Text="Overrides the model's embedded template. 'Fix from model' writes a patched copy with the strict message-order guards removed, which fixes tool-calling 400s (Claude Code / opencode). Save afterward."/>
+
+                            <TextBlock Classes="section" Text="SAMPLING"/>
+                            <CheckBox Content="Emit sampling overrides (--temp, --top-p, ...)"
+                                      IsChecked="{Binding Editor.SamplingEnabled}"/>
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="Temperature (--temp)"/>
+                                <TextBox Text="{Binding Editor.Temperature}"/>
+                            </DockPanel>
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="Top-p (--top-p)"/>
+                                <TextBox Text="{Binding Editor.TopP}"/>
+                            </DockPanel>
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="Top-k (--top-k)"/>
+                                <TextBox Text="{Binding Editor.TopK}"/>
+                            </DockPanel>
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="Min-p (--min-p)"/>
+                                <TextBox Text="{Binding Editor.MinP}"/>
+                            </DockPanel>
+                            <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="Presence penalty"/>
+                                <TextBox Text="{Binding Editor.PresencePenalty}"/>
+                            </DockPanel>
+
+                            <TextBlock Classes="section" Text="EXTRA ARGUMENTS"/>
+                            <TextBox Text="{Binding Editor.ExtraArgs}" AcceptsReturn="True"
+                                     TextWrapping="Wrap" MinHeight="48" VerticalContentAlignment="Top"/>
+                            <TextBlock Classes="muted" FontSize="11" Margin="0,4,0,0"
+                                       Text="Appended verbatim, e.g. --reasoning-preserve --rope-scaling yarn"/>
+
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Editor actions -->
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+                        <Button Content="Cancel" Command="{Binding CancelCommand}" Width="90" Margin="0,0,8,0"/>
+                        <Button Content="Save" Command="{Binding SaveCommand}" Width="90" Margin="0,0,8,0"/>
+                        <Button Content="Load Model" Classes="accent" Command="{Binding LoadCommand}" Width="130"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ================= Log splitter ================= -->
+        <GridSplitter Grid.Row="2" Height="6" ResizeDirection="Rows"
+                      HorizontalAlignment="Stretch" Background="Transparent" Margin="0,6"/>
+
+        <!-- ================= Log ================= -->
+        <Border Grid.Row="3" Background="{DynamicResource PanelBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                CornerRadius="10" Padding="12">
+            <DockPanel>
+                <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
+                    <TextBlock Classes="section" Text="SERVER OUTPUT" Margin="0"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <TextBlock Text="{Binding ServerStatus}" Foreground="{DynamicResource AccentBrush}"
+                                   FontFamily="{DynamicResource MonoFont}" FontSize="12"
+                                   VerticalAlignment="Center" Margin="0,0,12,0"/>
+                        <Button Content="Clear" Command="{Binding ClearLogCommand}" Padding="10,4"/>
+                    </StackPanel>
+                </Grid>
+                <ScrollViewer Name="LogScroller"
+                              HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                              Background="{DynamicResource BgBrush}">
+                    <SelectableTextBlock Text="{Binding LogText}" Padding="8"
+                                         FontFamily="{DynamicResource MonoFont}" FontSize="12"
+                                         Foreground="{DynamicResource TextBrush}" TextWrapping="NoWrap"/>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

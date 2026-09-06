@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Llama Launcher
+GenericName=LLM Server Manager
+Comment=Manage llama-server model launch profiles and export a native llama.cpp preset
+Exec=/opt/llama-launcher/LlamaLauncher
+Icon=llama-launcher
+Terminal=false
+Categories=Development;Utility;
+Keywords=llama;llm;ai;gguf;server;
+StartupWMClass=LlamaLauncher

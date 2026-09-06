@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>LlamaLauncher</RootNamespace>
+    <AssemblyName>LlamaLauncher</AssemblyName>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+
+    <!-- Embeds app.ico into the Windows PE header so Explorer shows it ON the .exe
+         (the Avalonia Window Icon only covers the runtime window/taskbar icon).
+         Ignored when publishing for Linux/macOS, which don't have per-exe icons. -->
+    <ApplicationIcon>app.ico</ApplicationIcon>
+
+    <!-- Release metadata: populates the exe's file properties and installer fields. -->
+    <Version>1.0.0</Version>
+    <FileVersion>1.0.0.0</FileVersion>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <Product>Llama Launcher</Product>
+    <Company>AptusWorks LLC</Company>
+    <Authors>AptusWorks LLC</Authors>
+    <Description>Cross-platform manager for llama-server model launch profiles, with native llama.cpp INI preset export.</Description>
+    <Copyright>Copyright (c) 2026 AptusWorks LLC</Copyright>
+    <RepositoryUrl>https://github.com/theJaraxleNUKE/LlamaLauncher</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="app.ico" />
+    <!-- Seed the config next to the exe. PreserveNewest keeps in-app edits across rebuilds. -->
+    <None Update="llama-models.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.2.1" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.2.1" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.1" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.1" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.2.1" />
+  </ItemGroup>
+
+</Project>

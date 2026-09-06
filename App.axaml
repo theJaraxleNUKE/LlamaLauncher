@@ -1,0 +1,113 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="LlamaLauncher.App"
+             RequestedThemeVariant="Dark">
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <!-- Retint Fluent's accent to cyan (drives checkboxes, selection, focus). -->
+            <Color x:Key="SystemAccentColor">#22D3EE</Color>
+            <Color x:Key="SystemAccentColorDark1">#1BB6D1</Color>
+            <Color x:Key="SystemAccentColorDark2">#0E7490</Color>
+            <Color x:Key="SystemAccentColorDark3">#0A5A72</Color>
+            <Color x:Key="SystemAccentColorLight1">#4FDEF0</Color>
+            <Color x:Key="SystemAccentColorLight2">#7CE8F5</Color>
+            <Color x:Key="SystemAccentColorLight3">#A9F1F9</Color>
+
+            <!-- Palette -->
+            <Color x:Key="BgColor">#0B0F14</Color>
+            <Color x:Key="PanelColor">#131A22</Color>
+            <Color x:Key="PanelAltColor">#1A2430</Color>
+            <Color x:Key="BorderColor">#26333F</Color>
+            <Color x:Key="AccentColor">#22D3EE</Color>
+            <Color x:Key="AccentDimColor">#0E7490</Color>
+            <Color x:Key="TextColor">#E5EEF5</Color>
+            <Color x:Key="MutedColor">#7D8DA1</Color>
+            <Color x:Key="DangerColor">#F87171</Color>
+            <Color x:Key="SuccessColor">#34D399</Color>
+            <Color x:Key="WarnColor">#FBBF24</Color>
+
+            <SolidColorBrush x:Key="BgBrush" Color="{StaticResource BgColor}"/>
+            <SolidColorBrush x:Key="PanelBrush" Color="{StaticResource PanelColor}"/>
+            <SolidColorBrush x:Key="PanelAltBrush" Color="{StaticResource PanelAltColor}"/>
+            <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}"/>
+            <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}"/>
+            <SolidColorBrush x:Key="AccentDimBrush" Color="{StaticResource AccentDimColor}"/>
+            <SolidColorBrush x:Key="TextBrush" Color="{StaticResource TextColor}"/>
+            <SolidColorBrush x:Key="MutedBrush" Color="{StaticResource MutedColor}"/>
+            <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource DangerColor}"/>
+            <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}"/>
+            <SolidColorBrush x:Key="WarnBrush" Color="{StaticResource WarnColor}"/>
+
+            <FontFamily x:Key="MonoFont">Cascadia Mono,DejaVu Sans Mono,Liberation Mono,Consolas,monospace</FontFamily>
+        </ResourceDictionary>
+    </Application.Resources>
+
+    <Application.Styles>
+        <FluentTheme />
+
+        <!-- ===== Text classes ===== -->
+        <Style Selector="TextBlock.section">
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,14,0,6"/>
+        </Style>
+        <Style Selector="TextBlock.label">
+            <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="TextBlock.rowlabel">
+            <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Width" Value="150"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="TextBlock.muted">
+            <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+        </Style>
+
+        <!-- ===== Field row (label docks left by default, editor fills) ===== -->
+        <Style Selector="DockPanel.row">
+            <Setter Property="Margin" Value="0,4"/>
+        </Style>
+
+        <!-- ===== TextBox ===== -->
+        <Style Selector="TextBox">
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="SelectionBrush" Value="{DynamicResource AccentDimBrush}"/>
+        </Style>
+
+        <!-- ===== Buttons ===== -->
+        <Style Selector="Button">
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="14,7"/>
+        </Style>
+        <Style Selector="Button.accent">
+            <Setter Property="Background" Value="{DynamicResource AccentDimBrush}"/>
+            <Setter Property="Foreground" Value="#001318"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style Selector="Button.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+        </Style>
+        <Style Selector="Button.danger">
+            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+        </Style>
+
+        <!-- ===== ListBox ===== -->
+        <Style Selector="ListBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="CornerRadius" Value="6"/>
+        </Style>
+    </Application.Styles>
+</Application>
