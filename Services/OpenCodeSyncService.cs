@@ -15,7 +15,6 @@ public sealed class OpenCodeSyncService
 {
     public readonly record struct Result(bool Changed, string Message);
 
-<<<<<<< HEAD
     private const string ProviderId = "llama-local";
 
     /// <summary>Sensible max output tokens for a freshly created model entry.</summary>
@@ -28,19 +27,6 @@ public sealed class OpenCodeSyncService
     /// </summary>
     public Result Sync(string openCodePath, string alias, string displayName, int context,
                        string host, int port, bool switchActiveModel = true)
-=======
-    /// <summary>Fallback max output tokens when a model entry has no limit.output yet.</summary>
-    private const int DefaultOutputTokens = 8192;
-
-    /// <summary>
-    /// Sets limit.context (and limit.output) for every provider model whose key
-    /// equals <paramref name="modelKey"/>, and — when <paramref name="switchActiveModel"/>
-    /// is true — repoints the top-level "model"/"small_model" at that model so
-    /// OpenCode actually uses whatever the app just loaded. Returns a result.
-    /// </summary>
-    public Result UpdateContext(string openCodePath, string modelKey, int context,
-                               int? output = null, bool switchActiveModel = true)
->>>>>>> 798361aa46905460960ea98562207dc3b16be2b6
     {
         if (string.IsNullOrWhiteSpace(openCodePath))
             return new Result(false, "OpenCode path not set; skipped.");
@@ -94,17 +80,8 @@ public sealed class OpenCodeSyncService
                 model["limit"] = limit;
             }
             limit["context"] = context;
-<<<<<<< HEAD
             if (limit["output"] is null)
                 limit["output"] = DefaultOutput(context);
-=======
-            if (output is int o)
-                limit["output"] = o;
-            else if (limit["output"] is null)
-                // OpenCode's schema requires limit.output whenever limit is present.
-                // Never leave a limit block without it, or opencode.json won't load.
-                limit["output"] = Math.Min(context, DefaultOutputTokens);
->>>>>>> 798361aa46905460960ea98562207dc3b16be2b6
 
             foundProvider ??= provider.Key;
             updated++;
@@ -126,7 +103,6 @@ public sealed class OpenCodeSyncService
                 targetProvider["models"] = targetModels;
             }
 
-<<<<<<< HEAD
             targetModels[alias] = new JsonObject
             {
                 ["name"] = string.IsNullOrWhiteSpace(displayName) ? alias : displayName,
@@ -149,20 +125,6 @@ public sealed class OpenCodeSyncService
         }
 
         // 4) Persist.
-=======
-        // Point OpenCode at the model the app just loaded so the UI, context bar,
-        // and routing all reflect it (not whatever was previously selected).
-        var switchedActive = false;
-        if (switchActiveModel && foundProvider is not null)
-        {
-            var qualified = $"{foundProvider}/{modelKey}";
-            rootObj["model"] = qualified;
-            if (rootObj["small_model"] is not null)
-                rootObj["small_model"] = qualified;
-            switchedActive = true;
-        }
-
->>>>>>> 798361aa46905460960ea98562207dc3b16be2b6
         try
         {
             var dir = Path.GetDirectoryName(openCodePath);
@@ -176,7 +138,6 @@ public sealed class OpenCodeSyncService
             return new Result(false, $"Failed to write opencode.json: {ex.Message}");
         }
 
-<<<<<<< HEAD
         var verb = created ? (existed ? "Added" : "Created opencode.json and added") : "Updated";
         var activeNote = switchedActive ? $"; active model -> {foundProvider}/{alias}" : "";
         return new Result(true, $"{verb} \"{alias}\" (context {context}){activeNote}.");
@@ -211,10 +172,5 @@ public sealed class OpenCodeSyncService
             },
             ["models"] = new JsonObject()
         };
-=======
-        var entries = updated == 1 ? "entry" : "entries";
-        var activeNote = switchedActive ? $"; active model -> {foundProvider}/{modelKey}" : "";
-        return new Result(true, $"Set limit.context = {context} for \"{modelKey}\" ({updated} {entries}){activeNote}.");
->>>>>>> 798361aa46905460960ea98562207dc3b16be2b6
     }
 }
