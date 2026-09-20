@@ -318,7 +318,13 @@ public sealed class MainViewModel : ObservableObject
         => Editor is { IsConfigured: true, IsDirty: false }
            && _selectedModel is { FileMissing: false };
 
-    private void LoadModel()
+    /// <summary>
+    /// Set by the view to confirm (and warn about) writing opencode.json before
+    /// the sync runs. Returns true to proceed. Null = proceed without a prompt.
+    /// </summary>
+    public Func<string, System.Threading.Tasks.Task<bool>>? ConfirmOpenCodeSync { get; set; }
+
+    private async void LoadModel()
     {
         if (Editor is null || _selectedModel is null) return;
 
@@ -342,8 +348,17 @@ public sealed class MainViewModel : ObservableObject
 
             if (SyncOpenCode && !string.IsNullOrWhiteSpace(OpenCodePath))
             {
-                var result = _openCode.UpdateContext(OpenCodePath, cfg.Alias, cfg.ContextSize);
-                AppendLog("OpenCode: " + result.Message);
+                var proceed = ConfirmOpenCodeSync is null || await ConfirmOpenCodeSync(OpenCodePath);
+                if (proceed)
+                {
+                    var result = _openCode.Sync(OpenCodePath, cfg.Alias, cfg.ProfileName,
+                                                cfg.ContextSize, cfg.Host, cfg.Port);
+                    AppendLog("OpenCode: " + result.Message);
+                }
+                else
+                {
+                    AppendLog("OpenCode: update skipped (declined).");
+                }
             }
         }
         catch (Exception ex)

@@ -1,8 +1,11 @@
 using System;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using LlamaLauncher.ViewModels;
@@ -20,8 +23,57 @@ public partial class MainWindow : Window
 
         _logScroller = this.FindControl<ScrollViewer>("LogScroller");
         DataContext = _viewModel;
+        _viewModel.ConfirmOpenCodeSync = ConfirmOpenCodeSyncAsync;
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
         _viewModel.Initialize();
+    }
+
+    /// <summary>Warns that opencode.json will be rewritten and returns the user's choice.</summary>
+    private async Task<bool> ConfirmOpenCodeSyncAsync(string path)
+    {
+        var proceed = false;
+
+        var message = new TextBlock
+        {
+            TextWrapping = TextWrapping.Wrap,
+            Text = "LlamaLauncher will update your OpenCode config to point it at the " +
+                   "model being launched (provider, model entry, context, and active model):" +
+                   Environment.NewLine + Environment.NewLine + path
+        };
+
+        var update = new Button { Content = "Update opencode.json", IsDefault = true };
+        var skip = new Button { Content = "Skip" };
+
+        var dialog = new Window
+        {
+            Title = "Update OpenCode config?",
+            Width = 480,
+            SizeToContent = SizeToContent.Height,
+            CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Content = new StackPanel
+            {
+                Margin = new Thickness(18),
+                Spacing = 14,
+                Children =
+                {
+                    message,
+                    new StackPanel
+                    {
+                        Orientation = Orientation.Horizontal,
+                        HorizontalAlignment = HorizontalAlignment.Right,
+                        Spacing = 8,
+                        Children = { skip, update }
+                    }
+                }
+            }
+        };
+
+        update.Click += (_, _) => { proceed = true; dialog.Close(); };
+        skip.Click += (_, _) => { proceed = false; dialog.Close(); };
+
+        await dialog.ShowDialog(this);
+        return proceed;
     }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)

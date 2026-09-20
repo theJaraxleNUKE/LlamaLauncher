@@ -266,11 +266,17 @@
                                 <TextBox Text="{Binding Editor.CacheReuse}"/>
                             </DockPanel>
                             <DockPanel Classes="row">
+                                <TextBlock Classes="rowlabel" Text="Thinking level"/>
+                                <ComboBox ItemsSource="{Binding Editor.ThinkingLevels}"
+                                          SelectedIndex="{Binding Editor.ThinkingIndex, Mode=TwoWay}"
+                                          HorizontalAlignment="Left" MinWidth="220"/>
+                            </DockPanel>
+                            <DockPanel Classes="row">
                                 <TextBlock Classes="rowlabel" Text="chat-template-kwargs"/>
                                 <TextBox Text="{Binding Editor.ChatTemplateKwargs}"/>
                             </DockPanel>
-                            <TextBlock Classes="muted" FontSize="11" Margin="0,0,0,0"
-                                       Text="JSON passed verbatim, e.g. {&quot;reasoning_effort&quot;:&quot;high&quot;}"/>
+                            <TextBlock Classes="muted" FontSize="11" Margin="0,0,0,0" TextWrapping="Wrap"
+                                       Text="Thinking level writes this field for you. 'Model default' keeps the model's own maximum; Low/Medium reduce it; Off disables thinking (Qwen family). Edit the JSON directly for anything custom (e.g. gpt-oss reasoning_effort high)."/>
 
                             <DockPanel Classes="row">
                                 <TextBlock Classes="rowlabel" Text="chat-template-file"/>

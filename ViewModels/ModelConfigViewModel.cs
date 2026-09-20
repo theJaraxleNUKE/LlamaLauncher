@@ -103,7 +103,47 @@ public sealed class ModelConfigViewModel : ObservableObject
 
     public int NCpuMoe { get => _nCpuMoe; set => SetEdit(ref _nCpuMoe, value); }
     public int CacheReuse { get => _cacheReuse; set => SetEdit(ref _cacheReuse, value); }
-    public string ChatTemplateKwargs { get => _chatTemplateKwargs; set => SetEdit(ref _chatTemplateKwargs, value); }
+    public string ChatTemplateKwargs
+    {
+        get => _chatTemplateKwargs;
+        set { SetEdit(ref _chatTemplateKwargs, value); OnPropertyChanged(nameof(ThinkingIndex)); }
+    }
+
+    // --- Thinking-level convenience: a friendly picker that writes ChatTemplateKwargs. ---
+    // Deliberately avoids "high"/"xhigh": those names differ per model family and an
+    // invalid one makes some templates (e.g. Qwen3.8) 500 on every request. "Model
+    // default" (empty) leaves the model at its own maximum instead.
+    public string[] ThinkingLevels { get; } = { "Model default", "Off (no thinking)", "Low", "Medium" };
+
+    private static readonly string[] ThinkingKwargs =
+    {
+        "",
+        "{\"enable_thinking\": false}",
+        "{\"reasoning_effort\": \"low\"}",
+        "{\"reasoning_effort\": \"medium\"}"
+    };
+
+    /// <summary>
+    /// Index into <see cref="ThinkingLevels"/> derived from ChatTemplateKwargs;
+    /// -1 when the field holds a custom value. Setting it writes the preset JSON.
+    /// </summary>
+    public int ThinkingIndex
+    {
+        get
+        {
+            var cur = Normalize(_chatTemplateKwargs);
+            for (var i = 0; i < ThinkingKwargs.Length; i++)
+                if (Normalize(ThinkingKwargs[i]) == cur) return i;
+            return -1;
+        }
+        set
+        {
+            if (value >= 0 && value < ThinkingKwargs.Length)
+                ChatTemplateKwargs = ThinkingKwargs[value];
+        }
+    }
+
+    private static string Normalize(string? s) => (s ?? string.Empty).Replace(" ", string.Empty);
     public string ChatTemplateFile { get => _chatTemplateFile; set => SetEdit(ref _chatTemplateFile, value); }
 
     public bool NoMmap { get => _noMmap; set => SetEdit(ref _noMmap, value); }
