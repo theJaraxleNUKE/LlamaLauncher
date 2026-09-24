@@ -31,6 +31,7 @@ public sealed class MainViewModel : ObservableObject
         DeleteProfileCommand = new RelayCommand(_ => DeleteProfile(), _ => _selectedModel is not null);
         ClearLogCommand = new RelayCommand(_ => { _logText = string.Empty; OnPropertyChanged(nameof(LogText)); });
         WriteIniCommand = new RelayCommand(_ => WriteIni(announce: true));
+        ApplyOpenCodeFeaturesCommand = new RelayCommand(_ => ApplyOpenCodeFeatures());
         FixTemplateCommand = new RelayCommand(_ => FixTemplate(),
             _ => Editor is not null && !string.IsNullOrWhiteSpace(Editor.FileName));
 
@@ -54,6 +55,7 @@ public sealed class MainViewModel : ObservableObject
     public RelayCommand ClearLogCommand { get; }
     public RelayCommand WriteIniCommand { get; }
     public RelayCommand FixTemplateCommand { get; }
+    public RelayCommand ApplyOpenCodeFeaturesCommand { get; }
 
     // ---- Bound state -------------------------------------------------------
     public ObservableCollection<ModelListItem> Models { get; } = new();
@@ -91,6 +93,13 @@ public sealed class MainViewModel : ObservableObject
     private bool _syncOpenCode = true;
     public bool SyncOpenCode { get => _syncOpenCode; set => SetProperty(ref _syncOpenCode, value); }
 
+    /// <summary>Curated MCP servers shown as checkboxes and applied to opencode.json.</summary>
+    public ObservableCollection<McpOption> McpServers { get; } = new();
+
+    private bool _enableLsp = true;
+    /// <summary>Turns on OpenCode's built-in LSP servers (C# diagnostics after every edit).</summary>
+    public bool EnableLsp { get => _enableLsp; set => SetProperty(ref _enableLsp, value); }
+
     private string _presetIniPath = string.Empty;
     public string PresetIniPath { get => _presetIniPath; set => SetProperty(ref _presetIniPath, value); }
 
@@ -113,6 +122,13 @@ public sealed class MainViewModel : ObservableObject
         SyncOpenCode = _config.SyncOpenCodeOnLoad;
         PresetIniPath = _config.PresetIniPath;
         WritePresetIni = _config.WritePresetIni;
+        EnableLsp = _config.OpenCodeEnableLsp;
+
+        var enabledIds = new HashSet<string>(
+            _config.EnabledMcpServers ?? McpCatalog.DefaultEnabledIds(), StringComparer.OrdinalIgnoreCase);
+        McpServers.Clear();
+        foreach (var def in McpCatalog.All)
+            McpServers.Add(new McpOption(def, enabledIds.Contains(def.Id)));
 
         ScanAndMerge();
         AppendLog($"Config: {_configService.ConfigPath}");
@@ -134,6 +150,8 @@ public sealed class MainViewModel : ObservableObject
         _config.SyncOpenCodeOnLoad = SyncOpenCode;
         _config.PresetIniPath = PresetIniPath;
         _config.WritePresetIni = WritePresetIni;
+        _config.OpenCodeEnableLsp = EnableLsp;
+        _config.EnabledMcpServers = McpServers.Where(o => o.IsEnabled).Select(o => o.Id).ToList();
         SaveConfig();
     }
 
@@ -319,10 +337,42 @@ public sealed class MainViewModel : ObservableObject
            && _selectedModel is { FileMissing: false };
 
     /// <summary>
-    /// Set by the view to confirm (and warn about) writing opencode.json before
-    /// the sync runs. Returns true to proceed. Null = proceed without a prompt.
+    /// Set by the view to confirm (and warn about) writing opencode.json before the
+    /// sync runs. Arguments: file path, then a summary of what will change. Returns
+    /// true to proceed. Null = proceed without a prompt.
     /// </summary>
-    public Func<string, System.Threading.Tasks.Task<bool>>? ConfirmOpenCodeSync { get; set; }
+    public Func<string, string, System.Threading.Tasks.Task<bool>>? ConfirmOpenCodeSync { get; set; }
+
+    /// <summary>Snapshot of the current MCP and LSP selections for the sync service.</summary>
+    private OpenCodeFeatures BuildFeatures()
+        => new(McpCatalog.All,
+               new HashSet<string>(McpServers.Where(o => o.IsEnabled).Select(o => o.Id),
+                                   StringComparer.OrdinalIgnoreCase),
+               EnableLsp);
+
+    /// <summary>Human-readable summary of the agent tools that will be written.</summary>
+    private string DescribeFeatures()
+    {
+        var names = McpServers.Where(o => o.IsEnabled).Select(o => o.DisplayName).ToList();
+        var mcp = names.Count == 0 ? "none" : string.Join(", ", names);
+        return $"MCP servers enabled: {mcp}\nLSP: {(EnableLsp ? "on" : "off")}";
+    }
+
+    /// <summary>Writes only the MCP and LSP selections to opencode.json (no model change).</summary>
+    private void ApplyOpenCodeFeatures()
+    {
+        if (string.IsNullOrWhiteSpace(OpenCodePath))
+        {
+            AppendLog("OpenCode: set the opencode.json path first.");
+            return;
+        }
+
+        PersistSettings();
+        var result = _openCode.ApplyFeatures(OpenCodePath, BuildFeatures());
+        AppendLog("OpenCode: " + result.Message);
+        if (result.Changed)
+            AppendLog("OpenCode: restart OpenCode to load the new tools.");
+    }
 
     private async void LoadModel()
     {
@@ -348,11 +398,12 @@ public sealed class MainViewModel : ObservableObject
 
             if (SyncOpenCode && !string.IsNullOrWhiteSpace(OpenCodePath))
             {
-                var proceed = ConfirmOpenCodeSync is null || await ConfirmOpenCodeSync(OpenCodePath);
+                var summary = $"Model: {cfg.Alias} (context {cfg.ContextSize})\n{DescribeFeatures()}";
+                var proceed = ConfirmOpenCodeSync is null || await ConfirmOpenCodeSync(OpenCodePath, summary);
                 if (proceed)
                 {
                     var result = _openCode.Sync(OpenCodePath, cfg.Alias, cfg.ProfileName,
-                                                cfg.ContextSize, cfg.Host, cfg.Port);
+                                                cfg.ContextSize, cfg.Host, cfg.Port, BuildFeatures());
                     AppendLog("OpenCode: " + result.Message);
                 }
                 else

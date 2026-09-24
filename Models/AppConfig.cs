@@ -1,3 +1,5 @@
+using LlamaLauncher.Services;
+
 namespace LlamaLauncher.Models;
 
 /// <summary>
@@ -23,6 +25,18 @@ public sealed class AppConfig
 
     /// <summary>When true, every config save also rewrites the llama-server INI preset.</summary>
     public bool WritePresetIni { get; set; } = true;
+
+    /// <summary>
+    /// Ids from <see cref="McpCatalog"/> to enable in opencode.json. Catalog servers not
+    /// listed are disabled (never deleted) when agent tools are applied.
+    /// </summary>
+    public List<string> EnabledMcpServers { get; set; } = McpCatalog.DefaultEnabledIds();
+
+    /// <summary>
+    /// Turns on OpenCode's built-in LSP servers, including C#. OpenCode disables every
+    /// LSP server when its config has no "lsp" key.
+    /// </summary>
+    public bool OpenCodeEnableLsp { get; set; } = true;
 
     public Dictionary<string, ModelConfig> Models { get; set; } = new();
 }

@@ -154,6 +154,31 @@ works without admin rights:
 You can always point the *config.ini* path in the top bar somewhere else (e.g.
 your llama.cpp working directory) so `llama-server --models-preset` finds it.
 
+## OpenCode agent tools (MCP servers + LSP)
+
+The **OpenCode agent tools** panel in the top bar sets OpenCode up for C#/.NET work.
+Selections are written to `opencode.json` on **Launch** (in the same confirmed write as
+the model switch; the confirmation lists exactly what will be enabled) or immediately with
+**Apply to opencode.json**. Restart OpenCode afterwards; it only reads config at startup.
+
+- **LSP.** OpenCode disables every LSP server when its config has no `lsp` key. Checking
+  *Enable LSP* writes `"lsp": {}`, which turns the built-in servers on, including C#
+  (needs a .NET SDK where OpenCode runs). The model then sees compiler diagnostics after
+  each edit. A `csharp` `disabled` override is cleared; other overrides are kept.
+- **MCP servers.** Ten curated servers: Roslyn, Microsoft Learn, Context7, NuGet, Grep
+  GitHub, GitHub, Sequential thinking, Playwright, Azure, and Memory. Hover one for what it
+  needs. Checked servers are added or enabled; unchecked ones are disabled, never deleted.
+  An entry you already configured, even under another key, is recognized by its command or
+  URL and only has its enabled flag changed, so your own settings (paths, timeouts) survive.
+  Both the flat `mcp.<name>` layout and the newer `mcp.servers.<name>` layout are handled,
+  and only keys valid for that layout are written.
+
+Commands run wherever OpenCode runs (for example inside WSL), so install requirements
+there: Node.js for the `npx` servers, and the .NET 10 SDK for NuGet (`dnx`). Every MCP
+server adds tool definitions to the prompt, which costs context and can confuse smaller
+local models. Start with the defaults (Roslyn, Microsoft Learn, Context7), and keep the set
+identical across runs when comparing models.
+
 ## Packaging & releases
 
 Building installers (Windows Inno Setup, Linux `.deb`/`.tar.gz`) and the GitHub

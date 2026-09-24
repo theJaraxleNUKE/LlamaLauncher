@@ -28,17 +28,26 @@ public partial class MainWindow : Window
         _viewModel.Initialize();
     }
 
-    /// <summary>Warns that opencode.json will be rewritten and returns the user's choice.</summary>
-    private async Task<bool> ConfirmOpenCodeSyncAsync(string path)
+    /// <summary>Warns that opencode.json will be rewritten, shows what changes, and returns the user's choice.</summary>
+    private async Task<bool> ConfirmOpenCodeSyncAsync(string path, string summary)
     {
         var proceed = false;
 
         var message = new TextBlock
         {
             TextWrapping = TextWrapping.Wrap,
-            Text = "LlamaLauncher will update your OpenCode config to point it at the " +
-                   "model being launched (provider, model entry, context, and active model):" +
+            Text = "LlamaLauncher will update your OpenCode config for the model being " +
+                   "launched (provider, model entry, context, and active model) and apply " +
+                   "your agent-tool selections. Existing MCP entries keep their settings; " +
+                   "unchecked servers are disabled, not deleted." +
                    Environment.NewLine + Environment.NewLine + path
+        };
+
+        var details = new TextBlock
+        {
+            TextWrapping = TextWrapping.Wrap,
+            FontSize = 12,
+            Text = summary
         };
 
         var update = new Button { Content = "Update opencode.json", IsDefault = true };
@@ -58,6 +67,7 @@ public partial class MainWindow : Window
                 Children =
                 {
                     message,
+                    details,
                     new StackPanel
                     {
                         Orientation = Orientation.Horizontal,

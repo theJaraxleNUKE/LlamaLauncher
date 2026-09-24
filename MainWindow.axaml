@@ -73,6 +73,38 @@
                     <CheckBox Grid.Column="4" Content="Auto-write on save"
                               VerticalAlignment="Center" IsChecked="{Binding WritePresetIni}"/>
                 </Grid>
+
+                <!-- OpenCode agent tools: MCP servers + LSP, written to opencode.json -->
+                <Expander Margin="0,10,0,0" HorizontalAlignment="Stretch"
+                          Header="OpenCode agent tools (MCP servers + LSP)">
+                    <StackPanel Spacing="8">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Content="Apply to opencode.json"
+                                    Classes="accent" Command="{Binding ApplyOpenCodeFeaturesCommand}"/>
+                            <CheckBox Content="Enable LSP (C# diagnostics after every edit)"
+                                      VerticalAlignment="Center" IsChecked="{Binding EnableLsp}"/>
+                        </DockPanel>
+
+                        <TextBlock Classes="muted" FontSize="11" TextWrapping="Wrap"
+                                   Text="Checked servers are enabled in opencode.json on Launch and on Apply; unchecked ones are disabled, never deleted. Entries you already configured keep their settings. Every server adds tool definitions to the prompt, so keep the list short for local models. Hover a server for its requirements."/>
+
+                        <ItemsControl ItemsSource="{Binding McpServers}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Width="250" Margin="0,0,8,0"
+                                              Content="{Binding DisplayName}"
+                                              IsChecked="{Binding IsEnabled, Mode=TwoWay}"
+                                              ToolTip.Tip="{Binding Tooltip}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Expander>
             </StackPanel>
         </Border>
 
