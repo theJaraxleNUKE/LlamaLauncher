@@ -173,6 +173,15 @@ the model switch; the confirmation lists exactly what will be enabled) or immedi
   Both the flat `mcp.<name>` layout and the newer `mcp.servers.<name>` layout are handled,
   and only keys valid for that layout are written.
 
+- **YOLO-DANGEROUS.** Off by default. When checked (after a confirmation prompt), Launch and
+  Apply write a `permission` block that sets every OpenCode tool to `allow` (`*`, `read`,
+  `edit`, `glob`, `grep`, `bash`, `task`, `todowrite`, `skill`, `lsp`, `question`,
+  `webfetch`, `websearch`, `external_directory`, `doom_loop`), so the agent never stops to
+  ask. Unchecking removes the block, but only if it is still exactly the YOLO block; a
+  permission policy you wrote yourself is left alone. Use it in a throwaway folder or with
+  your work committed, since nothing stops a confused model from running a destructive
+  command.
+
 Commands run wherever OpenCode runs (for example inside WSL), so install requirements
 there: Node.js for the `npx` servers, and the .NET 10 SDK for NuGet (`dnx`). Every MCP
 server adds tool definitions to the prompt, which costs context and can confuse smaller

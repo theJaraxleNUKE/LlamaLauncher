@@ -9,10 +9,15 @@ namespace LlamaLauncher.Services;
 /// <param name="Catalog">Every MCP server the launcher manages.</param>
 /// <param name="EnabledIds">Catalog ids to enable; the rest are disabled (never deleted).</param>
 /// <param name="EnableLsp">Turn on OpenCode's built-in LSP servers (C# included).</param>
+/// <param name="YoloDangerous">
+/// Write a "permission" block that allows every tool without prompting. When false, that
+/// block is removed again, but only if it is still exactly the YOLO block.
+/// </param>
 public sealed record OpenCodeFeatures(
     IReadOnlyList<McpServerDefinition> Catalog,
     IReadOnlySet<string> EnabledIds,
-    bool EnableLsp);
+    bool EnableLsp,
+    bool YoloDangerous = false);
 
 /// <summary>
 /// Keeps an OpenCode config (opencode.json) configured for the loaded model and the
@@ -153,7 +158,51 @@ public sealed class OpenCodeSyncService
     {
         var mcpNote = ApplyMcp(rootObj, features);
         var lspNote = ApplyLsp(rootObj, features.EnableLsp);
-        return $"{mcpNote}; {lspNote}";
+        var yoloNote = ApplyYolo(rootObj, features.YoloDangerous);
+        return $"{mcpNote}; {lspNote}; {yoloNote}";
+    }
+
+    // ---- YOLO-DANGEROUS permissions -----------------------------------------
+
+    /// <summary>Permission keys allowed in YOLO mode, in the order they are written.</summary>
+    private static readonly string[] YoloPermissionKeys =
+    [
+        "*", "read", "edit", "glob", "grep", "bash", "task", "todowrite", "skill", "lsp",
+        "question", "webfetch", "websearch", "external_directory", "doom_loop"
+    ];
+
+    /// <summary>Builds the permission block that allows every tool without asking.</summary>
+    private static JsonObject BuildYoloPermission()
+    {
+        var permission = new JsonObject();
+        foreach (var key in YoloPermissionKeys)
+            permission[key] = "allow";
+        return permission;
+    }
+
+    /// <summary>
+    /// On: replaces "permission" with the allow-everything block. Off: removes "permission"
+    /// only when it is exactly that block, so a policy the user wrote by hand is kept.
+    /// </summary>
+    private static string ApplyYolo(JsonObject rootObj, bool enable)
+    {
+        var yolo = BuildYoloPermission();
+
+        if (enable)
+        {
+            rootObj["permission"] = yolo;
+            return "YOLO-DANGEROUS on (all tools allowed without asking)";
+        }
+
+        if (rootObj["permission"] is JsonNode current && JsonNode.DeepEquals(current, yolo))
+        {
+            rootObj.Remove("permission");
+            return "YOLO-DANGEROUS off (permission block removed)";
+        }
+
+        return rootObj.ContainsKey("permission")
+            ? "YOLO-DANGEROUS off (your own permission block left as is)"
+            : "YOLO-DANGEROUS off";
     }
 
     /// <summary>

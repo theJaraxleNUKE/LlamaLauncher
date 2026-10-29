@@ -85,6 +85,12 @@
                                       VerticalAlignment="Center" IsChecked="{Binding EnableLsp}"/>
                         </DockPanel>
 
+                        <CheckBox Content="YOLO-DANGEROUS (allow every tool without asking)"
+                                  Foreground="{DynamicResource DangerBrush}" FontWeight="SemiBold"
+                                  IsChecked="{Binding YoloDangerous, Mode=TwoWay}"
+                                  Click="YoloDangerous_Click"
+                                  ToolTip.Tip="Writes a permission block to opencode.json that lets the agent run any shell command, edit or delete any file, and reach directories outside the project without prompting. Unchecking removes that block (a permission block you wrote yourself is left alone)."/>
+
                         <TextBlock Classes="muted" FontSize="11" TextWrapping="Wrap"
                                    Text="Checked servers are enabled in opencode.json on Launch and on Apply; unchecked ones are disabled, never deleted. Entries you already configured keep their settings. Every server adds tool definitions to the prompt, so keep the list short for local models. Hover a server for its requirements."/>
 

@@ -86,6 +86,58 @@ public partial class MainWindow : Window
         return proceed;
     }
 
+    /// <summary>Asks for confirmation when YOLO-DANGEROUS is switched on; reverts it if declined.</summary>
+    private async void YoloDangerous_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not CheckBox { IsChecked: true }) return;
+
+        var proceed = false;
+        var allow = new Button { Content = "Enable YOLO-DANGEROUS" };
+        var cancel = new Button { Content = "Cancel", IsDefault = true };
+
+        var dialog = new Window
+        {
+            Title = "Enable YOLO-DANGEROUS?",
+            Width = 480,
+            SizeToContent = SizeToContent.Height,
+            CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Content = new StackPanel
+            {
+                Margin = new Thickness(18),
+                Spacing = 14,
+                Children =
+                {
+                    new TextBlock
+                    {
+                        TextWrapping = TextWrapping.Wrap,
+                        Text = "OpenCode will run every tool without asking you first: any shell " +
+                               "command, edits or deletes of any file, web access, and directories " +
+                               "outside the project. A local model that misreads a task can damage " +
+                               "files or your system. Use it in a disposable folder or with your " +
+                               "work committed to git." +
+                               Environment.NewLine + Environment.NewLine +
+                               "It is written to opencode.json on the next Launch or Apply."
+                    },
+                    new StackPanel
+                    {
+                        Orientation = Orientation.Horizontal,
+                        HorizontalAlignment = HorizontalAlignment.Right,
+                        Spacing = 8,
+                        Children = { cancel, allow }
+                    }
+                }
+            }
+        };
+
+        allow.Click += (_, _) => { proceed = true; dialog.Close(); };
+        cancel.Click += (_, _) => { proceed = false; dialog.Close(); };
+
+        await dialog.ShowDialog(this);
+        if (!proceed)
+            _viewModel.YoloDangerous = false;
+    }
+
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(MainViewModel.LogText))

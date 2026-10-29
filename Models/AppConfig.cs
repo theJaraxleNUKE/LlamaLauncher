@@ -38,5 +38,11 @@ public sealed class AppConfig
     /// </summary>
     public bool OpenCodeEnableLsp { get; set; } = true;
 
+    /// <summary>
+    /// YOLO-DANGEROUS: writes a "permission" block to opencode.json that lets the agent run
+    /// any shell command, edit any file, and reach outside the project without asking.
+    /// </summary>
+    public bool OpenCodeYoloDangerous { get; set; }
+
     public Dictionary<string, ModelConfig> Models { get; set; } = new();
 }

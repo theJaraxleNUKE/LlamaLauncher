@@ -100,6 +100,13 @@ public sealed class MainViewModel : ObservableObject
     /// <summary>Turns on OpenCode's built-in LSP servers (C# diagnostics after every edit).</summary>
     public bool EnableLsp { get => _enableLsp; set => SetProperty(ref _enableLsp, value); }
 
+    private bool _yoloDangerous;
+    /// <summary>
+    /// YOLO-DANGEROUS: OpenCode runs every tool (shell, edits, outside-project access)
+    /// without asking. Written to opencode.json as a "permission" block.
+    /// </summary>
+    public bool YoloDangerous { get => _yoloDangerous; set => SetProperty(ref _yoloDangerous, value); }
+
     private string _presetIniPath = string.Empty;
     public string PresetIniPath { get => _presetIniPath; set => SetProperty(ref _presetIniPath, value); }
 
@@ -123,6 +130,7 @@ public sealed class MainViewModel : ObservableObject
         PresetIniPath = _config.PresetIniPath;
         WritePresetIni = _config.WritePresetIni;
         EnableLsp = _config.OpenCodeEnableLsp;
+        YoloDangerous = _config.OpenCodeYoloDangerous;
 
         var enabledIds = new HashSet<string>(
             _config.EnabledMcpServers ?? McpCatalog.DefaultEnabledIds(), StringComparer.OrdinalIgnoreCase);
@@ -151,6 +159,7 @@ public sealed class MainViewModel : ObservableObject
         _config.PresetIniPath = PresetIniPath;
         _config.WritePresetIni = WritePresetIni;
         _config.OpenCodeEnableLsp = EnableLsp;
+        _config.OpenCodeYoloDangerous = YoloDangerous;
         _config.EnabledMcpServers = McpServers.Where(o => o.IsEnabled).Select(o => o.Id).ToList();
         SaveConfig();
     }
@@ -348,14 +357,18 @@ public sealed class MainViewModel : ObservableObject
         => new(McpCatalog.All,
                new HashSet<string>(McpServers.Where(o => o.IsEnabled).Select(o => o.Id),
                                    StringComparer.OrdinalIgnoreCase),
-               EnableLsp);
+               EnableLsp,
+               YoloDangerous);
 
     /// <summary>Human-readable summary of the agent tools that will be written.</summary>
     private string DescribeFeatures()
     {
         var names = McpServers.Where(o => o.IsEnabled).Select(o => o.DisplayName).ToList();
         var mcp = names.Count == 0 ? "none" : string.Join(", ", names);
-        return $"MCP servers enabled: {mcp}\nLSP: {(EnableLsp ? "on" : "off")}";
+        var yolo = YoloDangerous
+            ? "ON - every tool runs without asking (shell, edits, outside-project access)"
+            : "off";
+        return $"MCP servers enabled: {mcp}\nLSP: {(EnableLsp ? "on" : "off")}\nYOLO-DANGEROUS: {yolo}";
     }
 
     /// <summary>Writes only the MCP and LSP selections to opencode.json (no model change).</summary>
